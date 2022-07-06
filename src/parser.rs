@@ -40,25 +40,55 @@ impl Parser {
 
     }
 
-    pub fn parseRow(&self ,index: usize) -> String {
+    /// Parsers a row from  markdown formal to HTML format
+    /// 
+    /// Params: 
+    ///     * self - instance of parser
+    ///     * index - index of a row that is being parsed
+    /// 
+    /// 
+    /// Returns:
+    ///     Parsed line
+    /// 
+    pub fn parse_row(&self ,index: usize) -> String {
         let row = self.input_file.get_row(index).unwrap().get_string();
         let row_by_word = row.split(" ").collect::<Vec<&str>>();
+        let first_letter = row_by_word.get(0).unwrap().chars().next().unwrap();
 
         // ! looks terrible, it must be refactored later 
-        let return_row = if row_by_word.get(0).unwrap().chars().next().unwrap() == '#' {
-            let header = row_by_word.get(0) .unwrap();
+        let return_row = if first_letter == '#' {
+            self.parse_header(row)
+        } else {
+            row
+        };
+        return return_row;
+    }
+
+    /// Parsers a row from  markdown header  `# ...` to HTML row `<h1> ... </h1>`
+    /// 
+    /// Params: 
+    ///     * self - instance of parser
+    ///     * row - a row that is getting parsed
+    /// 
+    /// 
+    /// Returns:
+    ///     Parsed line
+    /// 
+    fn parse_header(&self, row: String)  -> String {
+        let row_by_word = row.split(" ").collect::<Vec<&str>>();
+
+        let header = row_by_word.get(0) .unwrap();
 
             // Checks if the header is valid or not
             for char in header.chars() {
                 if char != '#' {
                     return row;
-
                 }
             }
 
             // max header in 6
             if header.len() > 6 {
-                row
+                return row
             } else {
                 let new_row = &mut row[header.len()+1..row.len()].to_string();
 
@@ -69,11 +99,8 @@ impl Parser {
 
                 new_row.push_str(&new_header);
 
-                new_row.to_string()
+                return new_row.to_string()
             }
-        } else {
-            row
-        };
-        return return_row;
+
     }
 }
