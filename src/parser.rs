@@ -40,6 +40,7 @@ impl Parser {
 
     }
 
+    // TODO: employ logic to parse every word in a row.
     /// Parsers a row from  markdown formal to HTML format
     /// 
     /// Params: 
@@ -81,22 +82,15 @@ impl Parser {
             if  !self.contains_only(&header.to_string(), '#') || header.len() > 6 {
                 return row
             } else {
-                let new_row = &mut row[header.len()+1..row.len()].to_string();
-
-                let new_header = format!("<h{}>", header.len());
-                new_row.insert_str(0, &new_header);
-
-                let new_header = format!("</h{}>", header.len());
-                new_row.push_str(&new_header);
-
-                return new_row.to_string()
+                let new_tag = format!("h{}", header.len());
+                self.add_html_wrapper(&row, &new_tag, header.len()+1, row.len())
             }
 
     }
 
     /// Returns a html horizontal rulers
     fn parse_horizontal_rules(&self) -> String {
-        return "<hr />".to_string();
+        "<hr />".to_string()
     }
 
     // ! Will be refactored later
@@ -149,4 +143,99 @@ impl Parser {
         return_row.retain(|c| !c.is_whitespace());
         return_row.to_string()
     }
+
+
+    // TODO: add parsing for bold italic
+    /// Find if the word is an emphasis and then wraps it into a correct html tag.
+    /// 
+    /// Params:
+    /// 
+    /// `self` - instance of a parser,
+    /// `word` - a word that is getting parsed
+    /// 
+    /// Returns:
+    /// 
+    /// A parsed string wrapped into a correct wrap
+    fn prase_emphasis(&self, word: &String) -> String{
+
+        // ! Check if these bounds are actually true
+        if self.is_bold(word) {
+            let tag = "b";
+            self.add_html_wrapper(word, tag, 3, word.len()-1)
+            
+        } else if self.is_italic(word) {
+            let tag = "em";
+            self.add_html_wrapper(word, tag, 2, word.len()-1)
+        } else {
+            word.clone().to_string()
+        }
+
+    }
+
+    /// Find if the word is bold.
+    /// 
+    /// Params:
+    /// 
+    /// `self` - instance of a parser,
+    /// `word` - a word that is getting checked
+    fn is_bold(&self, word: &String) -> bool {
+        self.is_double_wrapped(word, '*') || self.is_double_wrapped(word, '-') || self.is_double_wrapped(word, '_')
+    }
+
+    /// Find if the word is italic.
+    /// 
+    /// Params:
+    /// 
+    /// `self` - instance of a parser,
+    /// `word` - a word that is getting checked
+    fn is_italic(&self, word: &String) -> bool {
+        self.is_wrapped(word, '*') || self.is_wrapped(word, '-') || self.is_wrapped(word, '_')
+    }
+
+    /// Find if the word is wrapped by two same symbols.
+    /// 
+    /// Params:
+    /// 
+    /// `self` - instance of a parser,
+    /// `word` - a word that is getting checked
+    fn is_double_wrapped(&self, word: &String, symbol: char) -> bool {
+        let return_word = word.clone();
+        let mut chars = return_word.chars();
+        self.is_wrapped(word, symbol) && chars.nth(1) == Some(symbol) && chars.nth(word.len()-2) == Some(symbol)
+    }
+
+    /// Find if the word is wrapped by some symbol.
+    /// 
+    /// Params:
+    /// 
+    /// `self` - instance of a parser,
+    /// `word` - a word that is getting checked
+    fn is_wrapped(&self,  word: &String, symbol: char) -> bool {
+        let return_word = word.clone();
+        let mut chars = return_word.chars();
+        chars.next() == Some(symbol) && chars.last().unwrap()  == symbol
+    }
+
+    /// Wrappes a string in html tags.
+    /// 
+    /// Params:
+    /// 
+    ///  `self`,
+    ///  `row` - row being wrapped into an html tag,
+    ///  `tag` - a tag that is used as a wrapper,
+    ///  `tag_start` - where to insert opening tag,
+    ///  `tag_end` - where to instert closing tag
+    fn add_html_wrapper(&self, row: &String, tag: &str, tag_start: usize, tag_end: usize)  -> String {
+        let return_word = row.clone();
+        let new_row = &mut return_word[tag_start..tag_end].to_string();
+
+        let open_tag = format!("<{}>", tag);
+        let closing_tag = format!("</{}>", tag);
+        new_row.insert_str(0, &open_tag);
+        new_row.push_str(&closing_tag);
+
+        return new_row.to_string()
+    }
+
 }
+
