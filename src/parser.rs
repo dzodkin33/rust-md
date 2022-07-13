@@ -61,6 +61,13 @@ impl Parser {
         } else if self.is_horizontal_rules(&row) {
             self.parse_horizontal_rules()
         } else {
+
+            // TODO: test this out
+            for word in row_by_word {
+                let oldWord = word; 
+                let newWord = self.prase_emphasis(&word.to_string());
+                row.replace(word, &newWord);
+            }
             row
         };
         return return_row;
@@ -191,6 +198,16 @@ impl Parser {
     fn is_italic(&self, word: &String) -> bool {
         self.is_wrapped(word, '*') || self.is_wrapped(word, '-') || self.is_wrapped(word, '_')
     }
+    
+    fn is_italic_bold(&self, word: & String) -> bool {
+        self.is_triple_wrapped(word, '*') || self.is_wrapped(word, '-') || self.is_wrapped(word, '_') 
+    }
+
+    fn is_triple_wrapped(&self, word: &String, symbol: char) -> bool {
+        let return_word = word.clone();
+        let mut chars = return_word.chars();
+        self.is_wrapped(word, symbol) && chars.nth(2) == Some(symbol) && chars.nth(word.len()-3) == Some(symbol)
+    } 
 
     /// Find if the word is wrapped by two same symbols.
     /// 
