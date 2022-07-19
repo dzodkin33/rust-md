@@ -1,5 +1,8 @@
 
 mod parser;
+mod parser_legacy;
+mod renderer;
+mod token;
 mod document;
 mod row;
 use std::env;
